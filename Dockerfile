@@ -4,14 +4,15 @@ WORKDIR /app
 
 COPY . .
 
-# 第一步：以 root 权限安装所有依赖和设置权限
+# 1. 以 root 权限安装依赖（必须在切换用户之前完成）
 RUN apk update && apk --no-cache add openssl bash curl && \
     chmod +x app.py && \
     pip install -r requirements.txt
 
-# 第二步：安装完成后，再创建并切换到非 root 用户
-RUN adduser -D choreouser
-USER choreouser
+# 2. 创建一个 UID 在 10000-20000 之间的用户
+# -u 10001 指定用户 ID 为 10001，满足 CKV_CHOREO_1 的要求
+RUN adduser -D -u 10001 choreouser
+USER 10001
 
 EXPOSE 3000
 
