@@ -1,18 +1,23 @@
 FROM python:3.10-alpine
 
 WORKDIR /app
-
 COPY . .
 
-# 1. 以 root 权限安装依赖（必须在切换用户之前完成）
+# 1. 以 root 权限安装依赖
 RUN apk update && apk --no-cache add openssl bash curl && \
-    chmod +x app.py && \
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    chmod +x app.py
 
-# 2. 创建一个 UID 在 10000-20000 之间的用户
-# -u 10001 指定用户 ID 为 10001，满足 CKV_CHOREO_1 的要求
-RUN adduser -D -u 10001 choreouser
-USER 10001
+# 2. 核心修复：直接在镜像里注入环境变量
+# 将运行目录设为 /tmp 解决权限崩溃问题
+ENV FILE_PATH=/tmp
+# 强制程序使用 3000 端口
+ENV SERVER_PORT=3000
+ENV PORT=3000
+
+# 3. 设置 Choreo 要求的非 root 用户
+RUN adduser -D -u 10005 choreouser
+USER 10005
 
 EXPOSE 3000
 
